@@ -379,6 +379,7 @@
 (s/def :text-input/size #{:small :middle :large})
 (s/def :text-input/variant #{:outlined :borderless :filled})
 (s/def :text-input/text string?)
+(s/def :text-input/placeholder string?)
 
 (def global-design-tokens
   { ;; "Container background color, e.g: default button, input box, etc. Be sure not to confuse this with `colorBgElevated`."
@@ -870,18 +871,19 @@
       elem))))
 
 (defui text-input* [{:keys [disabled?
-                           status
-                           size
-                           variant
-                           text
-                           focused?
-                           cursor
-                           select-cursor
+                            status
+                            size
+                            variant
+                            text
+                            focused?
+                            cursor
+                            select-cursor
+                            placeholder
 
-                           mpos
-                           down-pos
-                           last-click
-                           ]
+                            mpos
+                            down-pos
+                            last-click
+                            ]
                     :or {cursor 0
                          text ""}
                     :as this}]
@@ -901,6 +903,20 @@
               #:paragraph-style
               {:text-style text-style})
         [tw th] (ui/bounds para)
+
+        placeholder-view
+        (when (and placeholder
+                   (= "" text))
+          (let [;;:colorTextPlaceholder
+                placeholder-text-style (assoc text-style
+                                              :text-style/color (:colorTextPlaceholder
+                                                                 global-design-tokens))
+                placeholder-para (para/paragraph
+                                  placeholder
+                                  nil
+                                  #:paragraph-style
+                                  {:text-style placeholder-text-style})]
+            placeholder-para))
 
         cursor-view
         (when-not select-cursor
@@ -989,8 +1005,10 @@
              {:size :large} (:paddingBlockLG text-input-design-tokens)
 
              :else (:paddingBlock text-input-design-tokens)))
-        w (+ px tw px)
-        h (+ py th py)
+
+        [pvw pvh] (ui/bounds placeholder-view)
+        w (+ px (max pvw tw) px)
+        h (+ py (max pvh th) py)
 
         border-shape (ui/rounded-rectangle w h border-radius)
         border-color (text-border-color this)
@@ -1014,6 +1032,7 @@
                                 (if selection-view
                                   selection-view
                                   cursor-view))
+                              placeholder-view
                               para])])]
     (->> elem
          (wrap-clipboard-events this)
@@ -1027,6 +1046,7 @@
                            text
                            cursor
                            select-cursor
+                           placeholder
 
                            mpos
                            down-pos
@@ -1058,6 +1078,8 @@
                    :$cursor $cursor
                    :select-cursor select-cursor
                    :$select-cursor $select-cursor
+                   :placeholder placeholder
+                   :$placeholder $placeholder
                    :mpos mpos
                    :$mpos $mpos
                    :down-pos down-pos
@@ -1092,6 +1114,11 @@
               (text-input {:size size
                            :variant variant
                            :status status
+                           :placeholder (str/join
+                                         " "
+                                         (eduction
+                                          (map str)
+                                          [size variant status]))
                            :text text})})))))))))
 
 (comment
