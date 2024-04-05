@@ -1354,7 +1354,7 @@
                              (zero? i) :left
                              (= (dec (count options)) i) :right
                              :else :middle)
-                  val (:val option)
+                  val (:value option)
                   hover? (get extra [::hover val])]
               (basic/on-hover
                {:hover? hover?
@@ -1380,9 +1380,9 @@
           (let [option (first options)]
             (if options
               (let [show-bar? (and (not= selection
-                                     (:val prev-option))
+                                     (:value prev-option))
                                    (not= selection
-                                     (:val option)))
+                                     (:value option)))
                     button (first buttons)]
                 (recur (+ (ui/width button)
                           offset)
@@ -1394,7 +1394,6 @@
                                (ui/translate offset 0 bar))
                          bars)))
               bars)))]
-    (prn bars)
     [(apply
       ui/horizontal-layout
       buttons)
@@ -1407,9 +1406,9 @@
      (apply
       ui/vertical-layout
       (radio-bar
-       {:options [{:text "small" :val :small}
-                  {:text "middle" :val :middle}
-                  {:text "large" :val :large}]
+       {:options [{:text "small" :value :small}
+                  {:text "middle" :value :middle}
+                  {:text "large" :value :large}]
         :selection size})
       (ui/spacer 8)
       (eduction
@@ -1424,7 +1423,7 @@
                 (into []
                       (map (fn [x]
                              {:text (str x)
-                              :val x}))
+                              :value x}))
                       options)})))
        (interpose (ui/spacer 10))
        (range 2 5))))))
