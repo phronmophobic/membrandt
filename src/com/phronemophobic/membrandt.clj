@@ -1433,6 +1433,300 @@
                                          {}))
   ,)
 
+;; # Progressbar
+
+(def progress-bar-design-tokens
+  {
+   ;; "Icon size of circular progress bar"
+   ;; :circleIconFontSize string	1.1666666666666667em
+   ;; "Text color of circular progress bar"
+   :circleTextColor (->color "rgba(0, 0, 0, 0.88)")
+   ;; "Text size of circular progress bar"
+   ;; :circleTextFontSize string	1em
+   ;; "Default color of progress bar"
+   :defaultColor (->color "#1677ff")
+   ;; "Border radius of line progress bar"
+   :lineBorderRadius 100
+   ;; "Color of remaining part of progress bar"
+   :remainingColor (->color "rgba(0, 0, 0, 0.06)") })
+(defui progress-bar [{:keys [progress
+                             height
+                             width]}]
+  (let [;; found empirically
+        height (if (number? height)
+                 height
+                 (case height
+                   :small 6
+                   :middle 8))
+        bg-color (:remainingColor progress-bar-design-tokens)
+        bg (ui/with-color bg-color
+             (ui/rounded-rectangle
+              width height
+              (/ height 2.0)))
+
+        fg-color (:defaultColor progress-bar-design-tokens)
+        fg (ui/with-color fg-color
+             (ui/rounded-rectangle
+              (min width
+                   (* width progress))
+              height
+              (/ height 2)))]
+    [bg
+     fg]))
+
+(comment
+
+  (skia/run
+    (constantly
+     (ui/translate
+      5 5
+      (apply
+       ui/vertical-layout
+       (eduction
+        (map (fn [pct]
+               (/ pct 100.0)))
+        (mapcat (fn [progress]
+                  (for [height [:small :middle]]
+                    (progress-bar {:width 400
+                                   :progress progress
+                                   :height height}))))
+        (interpose (ui/spacer 16))
+        (range 0 105 10))
+       ))))
+
+  ,)
+
+(def number-slider-design-tokens
+  {
+   ;; Height of slider
+   :controlSize 10
+   ;; Border color of dot when active
+   :dotActiveBorderColor (->color "#91caff")
+   ;; Border color of dot
+   :dotBorderColor (->color "#f0f0f0")
+   ;; Size of dot
+   :dotSize 8
+   ;; Color of handle when active
+   :handleActiveColor (->color "#1677ff")
+   ;; Color of handle
+   :handleColor (->color "#91caff")
+   ;; Color of handle when disabled
+   :handleColorDisabled (->color "#bfbfbf")
+   ;; Border width of handle
+   :handleLineWidth 2
+   ;; Border width of handle when hover
+   :handleLineWidthHover 4
+   ;; Size of handle
+   :handleSize 10
+   ;; Size of handle when hover
+   :handleSizeHover 12
+   ;; Background color of rail
+   :railBg (->color "rgba(0, 0, 0, 0.04)")
+   ;; Background color of rail when hover
+   :railHoverBg (->color "rgba(0, 0, 0, 0.06)")
+   ;; Height of rail
+   :railSize 4
+   ;; Background color of track
+   :trackBg (->color "#91caff")
+   ;; Background color of track when disabled
+   :trackBgDisabled (->color "rgba(0, 0, 0, 0.04)")
+   ;; Background color of track when hover
+   :trackHoverBg (->color "#69b1ff")})
+
+(defeffect ::update-number-slider [{:keys [slider mpos]}]
+  (let [[mx my] mpos
+        pct (/ mx
+               (:width slider))
+        new-val (* pct (- (:max slider)
+                          (:min slider)))
+        new-val (if (:integer? slider)
+                  (java.lang.Math/round new-val)
+                  new-val)
+        new-val (max
+                 (:min slider)
+                 (min
+                  new-val
+                  (:max slider)))]
+    (dispatch! [[:set (:$value slider) new-val]])))
+
+(defeffect ::adjust-number-slider [{:keys [slider delta]}]
+  (let [new-val (+ (:value slider)
+                   delta)
+        new-val (max
+                 (:min slider)
+                 (min
+                  new-val
+                  (:max slider)))]
+    (dispatch! [[:set (:$value slider) new-val]])))
+
+(defui number-slider* [{:keys [focused?
+                               hover?
+                               integer?
+                               width
+                               min
+                               max
+                               value]
+                        :as this}]
+  (let [mdown? (get extra :mdown?)
+        value (clojure.core/max
+               min
+               (clojure.core/min
+                max value))
+        
+        height (:railSize number-slider-design-tokens)
+        bg-color (if hover?
+                   (:railHoverBg number-slider-design-tokens)
+                   (:railBg number-slider-design-tokens))
+        bg (ui/filled-rectangle
+            bg-color
+            width height)
+
+        
+
+        track-width (* (/ (- value min)
+                          (- max min))
+                       width)
+        track-color (:trackBg number-slider-design-tokens)
+        track (ui/filled-rectangle track-color
+                                   track-width height)
+
+        handle-size (if focused?
+                      (:handleSizeHover number-slider-design-tokens)
+                      (:handleSize number-slider-design-tokens))
+        handle-shape (ui/rounded-rectangle
+                      handle-size
+                      handle-size
+                      (/ handle-size 2))
+        handle-color (if focused?
+                       (:handleActiveColor number-slider-design-tokens)
+                       (:handleColor number-slider-design-tokens))
+        handle-stroke-width (if focused?
+                              (:handleLineWidthHover number-slider-design-tokens)
+                              (:handleLineWidth number-slider-design-tokens))
+        handle-stroke (ui/with-style ::ui/style-stroke
+                        (ui/with-color handle-color
+                          (ui/with-stroke-width handle-stroke-width
+                            handle-shape)))
+        handle-fill (ui/with-style ::ui/style-fill
+                      (ui/with-color color-white
+                        handle-shape))
+        handle-view
+        (ui/translate
+         (- track-width
+            (/ handle-size 2))
+         (/ (- (:handleSizeHover number-slider-design-tokens)
+               handle-size)
+            2)
+         [handle-fill
+          handle-stroke])
+
+        track-offset-y (/ (- (:handleSizeHover number-slider-design-tokens)
+                             height)
+                          2)
+        elem (ui/fixed-bounds
+              [width
+               (:handleSizeHover number-slider-design-tokens)]
+              [(ui/translate
+                0 track-offset-y
+                [bg
+                 track])
+               handle-view])
+
+        elem+events
+        (if mdown?
+          (ui/on
+           :mouse-up
+           (fn [mpos]
+             [[::update-number-slider {:slider this
+                                       :mpos mpos}]
+              [:set $mdown? false]])
+           :mouse-move
+           (fn [mpos]
+             [[::update-number-slider {:slider this
+                                       :mpos mpos}]])
+           :mouse-move-global
+           (fn [[mx my]]
+             (let [[w h] (ui/bounds elem)]
+               (when (or (neg? mx)
+                         (> mx w)
+                         (neg? my)
+                         (> my h))
+                 [[:set $mdown? false]])))
+           elem)
+          ;; else
+          (ui/on
+           :mouse-down
+           (fn [mpos]
+             [[:set $mdown? true]
+              [::request-focus]
+              [::update-number-slider {:slider this
+                                       :mpos mpos}]])
+           elem))
+
+        elem+events
+        (if focused?
+          (ui/on
+           :key-press
+           (fn [s]
+             (case s
+               :left [[::adjust-number-slider {:delta (- 1)
+                                               :slider this}]]
+               :right [[::adjust-number-slider {:delta 1
+                                                :slider this}]]
+               ;; else
+               nil
+               ))
+           elem+events)
+          elem+events)
+        ]
+    elem+events))
+
+(defui number-slider [{:keys [^:membrane.component/contextual
+                              focus
+                              hover?
+                              integer?
+                              width
+                              min
+                              max
+                              value]}]
+  (let [focused? (= focus
+                    $value)]
+    (ui/on
+     ::request-focus
+     (fn []
+       [[:set $focus $value]])
+     (number-slider* {:focused? focused?
+                      
+                      :hover? hover?
+                      :$hover? $hover?
+                      :integer? integer?
+                      :$integer? $integer?
+                      :width width
+                      :$width $width
+                      :min min
+                      :$min $min
+                      :max max
+                      :$max $max
+                      :value value
+                      :$value $value}))))
+
+(defui debug-number-slider [{}]
+  (ui/translate
+   5 5
+   
+   (let [num (get extra :value 75)]
+     (ui/vertical-layout
+      (number-slider {:width 200
+                      :min 0
+                      :max 10
+                      :integer? false
+                      :value num})
+      (ui/label num)))))
+
+(comment
+  (skia/run
+    (membrane.component/make-app #'debug-number-slider {}))
+  ,)
 ;; h1...h5
 ;; icons
 
