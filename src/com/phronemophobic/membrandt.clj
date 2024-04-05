@@ -452,6 +452,7 @@
    ;; :fontFamily -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'
    ;; "The most widely used font size in the design system, from which the text gradient will be derived."
    :fontSize 14
+   :fontSizeLG 16
    ;; "Control the font size of operation icon in Select, Cascader, etc. Normally same as fontSizeSM."
    :fontSizeIcon 12
    ;; "Line height of text."
@@ -466,6 +467,9 @@
    ;; :motionDurationMid 0.2s
    ;; "Motion speed, slow speed. Used for large element animation interaction."
    ;; :motionDurationSlow 0.3s
+
+   :padding 16
+
    ;; "Control the large padding of the element."
    :paddingLG 24
    ;; "Control the extra small padding of the element."
@@ -1125,6 +1129,302 @@
   (skia/run (membrane.component/make-app #'text-input-debug-view {}))
   ,)
 
+
+;; # Radio
+
+
+
+(def radio-design-tokens
+  { ;; Background color of Radio button
+   :buttonBg (->color "#ffffff")
+   ;; Background color of checked Radio button
+   :buttonCheckedBg (->color "#ffffff")
+   ;; Background color of checked and disabled Radio button
+   :buttonCheckedBgDisabled (->color "rgba(0, 0, 0, 0.15)")
+   ;; Color of checked and disabled Radio button text
+   :buttonCheckedColorDisabled (->color "rgba(0, 0, 0, 0.25)")
+   ;; Color of Radio button text
+   :buttonColor (->color "rgba(0, 0, 0, 0.88)")
+
+   ;; not sure where specified. found empirically
+   :buttonPaddingInlineSM 7
+
+   ;; Horizontal padding of Radio button
+   :buttonPaddingInline 15
+   ;; Background color of checked solid Radio button text when active
+   :buttonSolidCheckedActiveBg (->color "#0958d9")
+   ;; Background color of checked solid Radio button text
+   :buttonSolidCheckedBg (->color "#1677ff")
+   ;; Color of checked solid Radio button text
+   :buttonSolidCheckedColor (->color  "#ffffff")
+   ;; Background color of checked solid Radio button text when hover
+   :buttonSolidCheckedHoverBg (->color "#4096ff")
+   ;; Color of disabled Radio dot
+   :dotColorDisabled (->color "rgba(0, 0, 0, 0.25)")
+   ;; Size of Radio dot
+   :dotSize 8
+   ;; Radio size
+   :radioSize 16
+   ;; Margin right of Radio button
+   :wrapperMarginInlineEnd 8})
+
+
+(s/def :radio-bar-item/text string?)
+(s/def :radio-bar-item/selected? boolean?)
+(s/def :radio-bar/position #{:left :middle :right})
+
+(defn left-rrect [w h border-radius]
+  (let [pad (+ border-radius 5)]
+    (ui/fixed-bounds
+     [w h]
+     (ui/translate
+      (- pad) (- pad)
+      (ui/scissor-view
+       [0 0]
+       [(+ w pad)
+        (+ h pad pad)]
+       (ui/translate pad pad
+                     (ui/rounded-rectangle
+                      (+ w pad)
+                      h
+                      border-radius)))))))
+
+(defn right-rrect [w h border-radius]
+  (let [pad (+ border-radius 5)]
+    (ui/fixed-bounds
+     [w h]
+     (ui/translate
+      0 (- pad)
+      (ui/scissor-view
+       [0 0]
+       [(+ w pad)
+        (+ h pad pad)]
+       (ui/translate (- pad) pad
+                     (ui/rounded-rectangle
+                      (+ w pad)
+                      h
+                      border-radius))))))
+  )
+
+
+(defui radio-bar-item [{:keys [text
+                               selected?
+                               hover?
+                               position
+                               size]
+                        :as this}]
+  (let [border-radius (case size
+                        :small (:borderRadiusSM global-design-tokens)
+                        :large (:borderRadiusLG global-design-tokens)
+                        ;; else
+                        (:borderRadius global-design-tokens))
+
+        font-size (case size
+                    :large (:fontSizeLG global-design-tokens)
+                    ;; else
+                    (:fontSize global-design-tokens))
+
+        
+
+
+        font-color (cond
+                     selected? (:buttonSolidCheckedColor radio-design-tokens)
+                     hover? (:buttonSolidCheckedHoverBg radio-design-tokens)
+                     :else (:buttonColor radio-design-tokens))
+
+        para (para/paragraph
+              text
+              nil
+              #:paragraph-style
+              {:text-style
+               #:text-style {;; :font-families ["SF Pro"]
+                             :font-size font-size
+                             :color font-color}})
+        [tw th] (ui/bounds para)
+        pw (case size
+             :small (:buttonPaddingInlineSM radio-design-tokens)
+             (:buttonPaddingInline radio-design-tokens))
+        ph 0
+
+        w (+ pw pw
+             tw
+             (case position
+               :left 1
+               :right 1
+               ;; else
+               1))
+        h (case size
+            :small (:controlHeightSM global-design-tokens)
+            :large (:controlHeightLG global-design-tokens)
+            ;; else
+            (:controlHeight global-design-tokens))
+
+        border-color (if selected?
+                       nil
+                       (:colorBorder global-design-tokens))
+        border-view (when border-color
+                      (let [shape (case position
+                                    :left (left-rrect w h border-radius)
+                                    
+                                    :right (right-rrect w h border-radius)
+                                    ;;else
+                                    [(ui/path [0 0] [w 0])
+                                     (ui/path [0 h] [w h])])]
+                       (ui/with-color border-color
+                         (ui/with-style ::ui/style-stroke
+                           shape))))
+        background-color (if selected?
+                            (:buttonSolidCheckedBg radio-design-tokens)
+                            nil)
+        background-view (when background-color
+                          (let [fw w
+                                fh (+ 2 h)
+                                shape (case position
+                                        :left (left-rrect fw fh border-radius)
+                                        
+                                        :right (right-rrect fw fh border-radius)
+                                        ;;else
+                                        (ui/rectangle fw fh))]
+                            (ui/with-color background-color
+                              (ui/with-style ::ui/style-fill
+                                (ui/translate
+                                 0 -1
+                                 shape)))))
+
+        elem [background-view
+              border-view
+              (ui/center
+               para
+               [w h])]]
+    (ui/fixed-bounds
+     [(dec w) h]
+     elem)))
+
+(defn radio-bar-separator [{:keys [size]
+                            :as this}]
+  (let [h (case size
+            :small (:controlHeightSM global-design-tokens)
+            :large (:controlHeightLG global-design-tokens)
+            ;; else
+            (:controlHeight global-design-tokens))
+
+        border-color (:colorBorder global-design-tokens)
+        border-view (when border-color
+                      (let [shape (ui/path [0 (- 0.5)] [0 (+ h 1)])]
+                        (ui/with-color border-color
+                          (ui/with-style ::ui/style-stroke
+                            shape))))]
+    (ui/fixed-bounds
+     [0 0]
+     border-view)))
+
+(defui debug-radio-bar-item [{}]
+  (ui/translate 5 5
+                (ui/horizontal-layout
+                 (radio-bar-item {:text "Hangzhou"
+                                  :position :left})
+                 (radio-bar-separator {})
+                 (radio-bar-item {:text "Shanghai"
+                                  :selected? true
+                                  :position :middle})
+                 (radio-bar-item {:text "Beijing"
+                                  :position :middle
+                                  
+                                  })
+                 (radio-bar-item {:text "Chengdu"
+                                  :position :right}))
+                
+                ))
+
+
+(comment
+  (skia/run (membrane.component/make-app #'debug-radio-bar-item
+                                         {}))
+  ,)
+
+(defui radio-bar [{:keys [size
+                          options
+                          selection]}]
+  (let [buttons
+        (into
+         []
+         (map-indexed
+          (fn [i option]
+            (let [position (cond
+                             (zero? i) :left
+                             (= (dec (count options)) i) :right
+                             :else :middle)
+                  val (:val option)
+                  hover? (get extra [::hover val])]
+              (basic/on-hover
+               {:hover? hover?
+                :$body nil
+                :body
+                (ui/on
+                 :mouse-down
+                 (fn [_]
+                   [[:set $selection val]])
+                 (radio-bar-item {:text (:text option)
+                                  :hover? hover?
+                                  :position position
+                                  :selected? (= val selection)
+                                  :size size}))}))))
+         options)
+        bar (radio-bar-separator {:size size})
+        bars
+        (loop [offset (ui/width (first buttons))
+               prev-option (first options)
+               buttons (next buttons)
+               options (next options)
+               bars []]
+          (let [option (first options)]
+            (if options
+              (let [show-bar? (and (not= selection
+                                     (:val prev-option))
+                                   (not= selection
+                                     (:val option)))
+                    button (first buttons)]
+                (recur (+ (ui/width button)
+                          offset)
+                       option
+                       (next buttons)
+                       (next options)
+                       (if show-bar?
+                         (conj bars
+                               (ui/translate offset 0 bar))
+                         bars)))
+              bars)))]
+    (prn bars)
+    [(apply
+      ui/horizontal-layout
+      buttons)
+     bars]))
+
+(defui debug-radio-bar [{}]
+  (ui/translate
+   5 5
+   (apply
+    ui/vertical-layout
+    (eduction
+     (map (fn [n]
+            (subvec ["a" "B" "C" "d" "e"]
+                    0 n)))
+     (map (fn [options]
+            (radio-bar
+             {:extra (get extra [:extra options])
+              :options
+              (into []
+                    (map (fn [x]
+                           {:text (str x)
+                            :val x}))
+                    options)})))
+     (interpose (ui/spacer 10))
+     (range 2 5)))))
+
+(comment
+  (skia/run (membrane.component/make-app #'debug-radio-bar
+                                         {}))
+  ,)
 
 ;; h1...h5
 ;; icons
