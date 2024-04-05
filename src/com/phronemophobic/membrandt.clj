@@ -1401,25 +1401,33 @@
      bars]))
 
 (defui debug-radio-bar [{}]
-  (ui/translate
-   5 5
-   (apply
-    ui/vertical-layout
-    (eduction
-     (map (fn [n]
-            (subvec ["a" "B" "C" "d" "e"]
-                    0 n)))
-     (map (fn [options]
-            (radio-bar
-             {:extra (get extra [:extra options])
-              :options
-              (into []
-                    (map (fn [x]
-                           {:text (str x)
-                            :val x}))
-                    options)})))
-     (interpose (ui/spacer 10))
-     (range 2 5)))))
+  (let [size (get extra :size)]
+    (ui/translate
+     5 5
+     (apply
+      ui/vertical-layout
+      (radio-bar
+       {:options [{:text "small" :val :small}
+                  {:text "middle" :val :middle}
+                  {:text "large" :val :large}]
+        :selection size})
+      (ui/spacer 8)
+      (eduction
+       (map (fn [n]
+              (subvec ["a" "B" "C" "d" "e"]
+                      0 n)))
+       (map (fn [options]
+              (radio-bar
+               {:extra (get extra [:extra options])
+                :size size
+                :options
+                (into []
+                      (map (fn [x]
+                             {:text (str x)
+                              :val x}))
+                      options)})))
+       (interpose (ui/spacer 10))
+       (range 2 5))))))
 
 (comment
   (skia/run (membrane.component/make-app #'debug-radio-bar
