@@ -177,11 +177,11 @@
 (defn button-text-style [{:keys [size type danger?]}]
   #:text-style
   {:font-size (get {:large 16
-                    :default 16
-                    :middle 16
+                    :default 14
+                    :middle 14
                     :small 14}
                    size
-                   16)
+                   14)
    :height-override true
    :height (get
             {:large 1.5
@@ -277,7 +277,8 @@
                        danger?
                        block?
                        text
-                       hover?]
+                       hover?
+                       on-click]
                 :as this}]
   (let [paragraph-style
         (assoc-in button-primary-paragraph-style
@@ -314,14 +315,27 @@
         background-border (when background-border-color
                             (ui/with-color background-border-color
                               (ui/with-style ::ui/style-stroke
-                                rect)))]
-    (ui/fixed-bounds
-     [w h]
-     [background-shadow
-      background
-      background-border
-      (ui/translate px py
-                    text)])))
+                                rect)))
+
+        body (ui/fixed-bounds
+              [w h]
+              [background-shadow
+               background
+               background-border
+               (ui/translate px py
+                             text)])
+        body (if on-click
+               (ui/on
+                :mouse-down
+                (fn [_]
+                  (on-click))
+                body)
+               ;; else
+               body)]
+    (basic/on-hover
+     {:hover? hover?
+      :$body nil
+      :body body})))
 
 (defui button-debug-view [{}]
   (ui/translate
@@ -344,14 +358,11 @@
                     :text
                     :link]]
           (let [hover? (get extra [:hover? size type danger?])]
-            (basic/on-hover
-             {:hover? hover?
-              :body
-              (button {:size size
+            (button {:size size
                        :type type
                        :danger? danger?
                        :hover? hover?
-                       :text (str size "-" type)})})))
+                       :text (str size "-" type)})))
         
         
         
@@ -363,7 +374,7 @@
                                     :color [0 0 0]}})))
 
 (comment
-  (skia/run (membrane.component/make-app #'debug-view {}))
+  (skia/run (membrane.component/make-app #'button-debug-view {}))
   ,)
 
 
@@ -534,7 +545,7 @@
    {:variant :filled
     :focused? true} nil
    {:variant :filled} (:colorFillTertiary global-design-tokens)
-   {:disabled? :true} (:colorBgContainerDisabled global-design-tokens)
+   {:disabled? true} (:colorBgContainerDisabled global-design-tokens)
 
    :else nil))
 
@@ -922,6 +933,7 @@
                                   {:text-style placeholder-text-style})]
             placeholder-para))
 
+        cursor (min cursor (count text))
         cursor-view
         (when-not select-cursor
           (let [{:keys [x y width height] :as rect}
@@ -1011,7 +1023,9 @@
              :else (:paddingBlock text-input-design-tokens)))
 
         [pvw pvh] (ui/bounds placeholder-view)
-        w (+ px (max pvw tw) px)
+        w (if-let [w (:flex-layout.stretch/width this)]
+            w
+            (+ px (max pvw tw) px))
         h (+ py (max pvh th) py)
 
         border-shape (ui/rounded-rectangle w h border-radius)
@@ -1061,7 +1075,6 @@
                     :or {cursor 0
                          text ""}
                     :as this}]
-
   (let [focused? (= focus
                     $text)]
     (ui/on
@@ -1090,7 +1103,8 @@
                    :$down-pos $down-pos
                    :last-click last-click
                    :$last-click $last-click
-                   :focused? focused?}))))
+                   :focused? focused?
+                   :flex-layout.stretch/width (:flex-layout.stretch/width this)}))))
 
 (defui text-input-debug-view [{}]
   (ui/translate
