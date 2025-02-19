@@ -155,6 +155,12 @@
   (->color "#ff7875"))
 (def ant-color-error-bg
   (->color "#fff2f0"))
+(def ant-color-bg-container-disabled
+  [0 0 0 0.04])
+(def ant-button-border-color-disabled
+  [(/ 217 255.0) (/ 217 255.0) (/ 217 255.0)])
+(def ant-color-text-disabled
+  [0 0 0 0.25])
 (def ant-color-border-error-hover
   (->color "#ffa39e"))
 (def ant-button-danger-shadow
@@ -174,7 +180,7 @@
    :middle [16 5]
    :small [8 1]})
 
-(defn button-text-style [{:keys [size type danger?]}]
+(defn button-text-style [{:keys [size type danger? disabled?]}]
   #:text-style
   {:font-size (get {:large 16
                     :default 14
@@ -190,20 +196,28 @@
              :small 1.5714285714285714}
             size
             1.5714285714285714)
-   :color (case type
-            :primary
-            [1 1 1]
-            
-            ;; else
-            (cond
-              danger? ant-color-error
+   ;; TODO: add link and hover states
+   :color (if disabled?
+            ant-color-text-disabled
+            (case type
+              :primary
+              [1 1 1]
 
-              :else
-              [0 0 0 0.8]))})
+              ;; else
+              (cond
+                danger? ant-color-error
+
+                :else
+                [0 0 0 0.8])))})
 
 (defn button-background-color [{:keys [type danger? hover?] :as m}]
   (match
    m
+
+   {:disabled? true
+    :type (:or :text :link)} {:background-color nil}
+
+   {:disabled? true} {:background-color ant-color-bg-container-disabled}
 
    {:danger? true
     :type :primary
@@ -242,6 +256,11 @@
 (defn button-background-border [{:keys [type danger? hover?] :as m}]
   (match
    m
+
+   {:disabled? true
+    :type (:or :text :link)} {:background-border-color nil}
+
+   {:disabled? true} {:background-border-color ant-button-border-color-disabled}
 
    {:type (:or :primary :text :link)} {:background-border-color nil}
 
@@ -337,41 +356,44 @@
       :$body nil
       :body body})))
 
+(comment
+  (dev/add-component-as-applet #'button-debug-view {})
+  ,)
+
 (defui button-debug-view [{}]
-  (ui/translate
-   20 20
-   (apply
-    ui/horizontal-layout
-    (for [danger? [false true]]
-      (apply
-       ui/vertical-layout
-       (into
-        []
-        (comp
-         (interpose (ui/spacer 20)))
-        (for [size [:small
-                    :middle
-                    :large]
-              type [:primary
-                    :default
-                    ;; :dashed
-                    :text
-                    :link]]
-          (let [hover? (get extra [:hover? size type danger?])]
-            (button {:size size
-                       :type type
-                       :danger? danger?
-                       :hover? hover?
-                       :text (str size "-" type)})))
-        
-        
-        
-        ))))
-   #_(para/paragraph "ehllo" nil
-                     #:paragraph-style
-                     {:text-style
-                      #:text-style { ;; :font-families ["SF Pro"]
-                                    :color [0 0 0]}})))
+  (let [[cw ch] (get context :membrane.stretch/container-size
+                     [800 800])]
+    (basic/scrollview
+     {:scroll-bounds [(- cw 7) (- ch 7)]
+      :$body nil
+      :body
+      (ui/translate
+       20 20
+       (apply
+        ui/horizontal-layout
+        (for [danger? [false true]
+              disabled? [false true]]
+          (apply
+           ui/vertical-layout
+           (into
+            []
+            (comp
+             (interpose (ui/spacer 20)))
+            (for [size [:small
+                        :middle
+                        :large]
+                  type [:primary
+                        :default
+                        ;; :dashed
+                        :text
+                        :link]]
+              (let [hover? (get extra [:hover? size type danger? disabled?])]
+                (button {:size size
+                         :type type
+                         :danger? danger?
+                         :disabled? disabled?
+                         :hover? hover?
+                         :text (str size "-" type (when disabled? "-disabled?"))}))))))))})))
 
 (comment
   (skia/run (membrane.component/make-app #'button-debug-view {}))
