@@ -1097,8 +1097,9 @@
                     :or {cursor 0
                          text ""}
                     :as this}]
-  (let [focused? (= focus
-                    $text)]
+  (let [focused? (and (= focus
+                         $text)
+                      (not disabled?))]
     (ui/on
      ::request-focus
      (fn []
