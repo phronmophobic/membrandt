@@ -1574,8 +1574,10 @@
   (let [[mx my] mpos
         pct (/ mx
                (:width slider))
-        new-val (* pct (- (:max slider)
-                          (:min slider)))
+        new-val (* pct
+                   (+ (:min slider)
+                      (- (:max slider)
+                         (:min slider))))
         new-val (if (:integer? slider)
                   (java.lang.Math/round new-val)
                   new-val)
