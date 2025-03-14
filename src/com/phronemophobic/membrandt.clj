@@ -552,6 +552,7 @@
    m
 
    {:variant :borderless} nil
+   {:disabled? true} (:colorBorder global-design-tokens)
    {:status :error} (:colorError global-design-tokens)
    {:status :warn} (:colorWarning global-design-tokens)
    {:focused? true}  (:activeBorderColor text-input-design-tokens)
