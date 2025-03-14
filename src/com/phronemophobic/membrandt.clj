@@ -1575,8 +1575,8 @@
   (let [[mx my] mpos
         pct (/ mx
                (:width slider))
-        new-val (* pct
-                   (+ (:min slider)
+        new-val (+ (:min slider)
+                   (* pct
                       (- (:max slider)
                          (:min slider))))
         new-val (if (:integer? slider)
