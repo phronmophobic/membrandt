@@ -3,7 +3,6 @@
             [clojure.string :as str]
             [clojure.math.combinatorics :as combo]
             [membrane.skia.paragraph :as para]
-            [membrane.skia :as skia]
             [membrane.ui :as ui]
             [membrane.basic-components :as basic]
             [clojure.core.match :refer [match]]
