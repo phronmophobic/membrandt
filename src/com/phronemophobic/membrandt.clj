@@ -908,6 +908,10 @@
            [[::drag $mpos pos]])))
       elem))))
 
+;; fixme: strings are broken into code points
+;; should be broken into grapheme clusters.
+;; Grapheme clusters aren't supported until Java20
+;; could use icu4j?
 (defui text-input* [{:keys [disabled?
                             status
                             size
