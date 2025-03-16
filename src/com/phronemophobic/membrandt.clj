@@ -963,40 +963,29 @@
         cursor-view
         (when-not select-cursor
           (let [{:keys [x y width height] :as rect}
-               (cond
+                (cond
 
-                 (= "" text)
-                 (first
-                  (para/get-rects-for-range (assoc para :paragraph " ")
-                                            0 1
-                                            :max
-                                            :tight))
+                  (= "" text)
+                  (first
+                   (para/get-rects-for-range (assoc para :paragraph " ")
+                                             0 1
+                                             :max
+                                             :tight))
 
-                 (>= cursor (count text))
-                 (let [r1 (first
-                           (para/get-rects-for-range (assoc para :paragraph " ")
-                                                     0 1
-                                                     :max
-                                                     :tight))
-                       r2 (first
-                           (para/get-rects-for-range para
-                                                     (dec cursor) cursor
-                                                     :max
-                                                     :tight))]
-                   ;; should actually be using a place holder so that
-                   ;; if the cursor is exactly at the wrap point,
-                   ;; it should wrap
-                   {:x (+ (:x r2) (:width r2))
-                    :y (:y r2)
-                    :width (:width r1)
-                    :height (:height r1)})
+                  (>= cursor (count text))
+                  (first
+                   (para/get-rects-for-range (assoc para :paragraph [(:paragraph para)
+                                                                     " "])
+                                             cursor (inc cursor)
+                                             :max
+                                             :tight))
 
-                 :else
-                 (first
-                  (para/get-rects-for-range para cursor (inc cursor)
-                                            :max
-                                            :tight)))
-               _ (assert rect)
+                  :else
+                  (first
+                   (para/get-rects-for-range para cursor (inc cursor)
+                                             :max
+                                             :tight)))
+                _ (assert rect)
                 width (if (zero? width)
                         (-> (para/get-rects-for-range (assoc para :paragraph " ")
                                                       0 1
