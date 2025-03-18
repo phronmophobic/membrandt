@@ -1160,6 +1160,39 @@
   ,)
 
 
+;; # Dropdown
+;; known as select in ant design
+;; https://ant.design/components/select
+
+
+;; open?
+;; value
+;; size: small, middle, large
+;; status: error warn ok
+
+;; clearBg	Background color of clear button	string	#ffffff
+;; multipleItemBg	Background color of multiple tag	string	rgba(0, 0, 0, 0.06)
+;; multipleItemBorderColor	Border color of multiple tag	string	transparent
+;; multipleItemBorderColorDisabled	Border color of multiple tag when disabled	string	transparent
+;; multipleItemColorDisabled	Text color of multiple tag when disabled	string	rgba(0, 0, 0, 0.25)
+;; multipleItemHeight	Height of multiple tag	number	24
+;; multipleItemHeightLG	Height of multiple tag with large size	number	32
+;; multipleItemHeightSM	Height of multiple tag with small size	number	16
+;; multipleSelectorBgDisabled	Background color of multiple selector when disabled	string	rgba(0, 0, 0, 0.04)
+;; optionActiveBg	Background color when option is active	string	rgba(0, 0, 0, 0.04)
+;; optionFontSize	Font size of option	number	14
+;; optionHeight	Height of option	number	32
+;; optionLineHeight	Line height of option	undefined | LineHeight<string | number>	1.5714285714285714
+;; optionPadding	Padding of option	undefined | Padding<string | number>	5px 12px
+;; optionSelectedBg	Background color when option is selected	string	#e6f4ff
+;; optionSelectedColor	Text color when option is selected	string	rgba(0, 0, 0, 0.88)
+;; optionSelectedFontWeight	Font weight when option is selected	undefined | FontWeight	600
+;; selectorBg	Background color of selector	string	#ffffff
+;; showArrowPaddingInlineEnd		number	18
+;; singleItemHeightLG	Height of single selected item with large size	number	40
+;; zIndexPopup	z-index of dropdown	number	1050
+
+
 ;; # Radio
 
 
@@ -1759,6 +1792,74 @@
   (skia/run
     (membrane.component/make-app #'debug-number-slider {}))
   ,)
+
+(def table-design-tokens
+  { ;; Background color of table sorted column
+   :bodySortBg (->color "#fafafa")
+   ;; Border color of table
+   :borderColor (->color "#f0f0f0")
+   ;; Font size of table cell (large size by default)
+   :cellFontSize 14
+   ;; Font size of table cell (middle size)
+   :cellFontSizeMD 14
+   ;; Font size of table cell (small size)
+   :cellFontSizeSM 14
+   ;; Vertical padding of table cell
+   :cellPaddingBlock 16
+   ;; Vertical padding of table cell (middle size)
+   :cellPaddingBlockMD 12
+   ;; Vertical padding of table cell (small size)
+   :cellPaddingBlockSM 8
+   ;; Horizontal padding of table cell (large size by default)
+   :cellPaddingInline 16
+   ;; Horizontal padding of table cell (middle size)
+   :cellPaddingInlineMD 8
+   ;; Horizontal padding of table cell (small size)
+   :cellPaddingInlineSM 8
+   ;; Background of expand button
+   :expandIconBg (->color "#ffffff")
+   ;; Color of filter dropdown
+   :filterDropdownBg (->color "#ffffff")
+   ;; Background of filter dropdown menu item
+   :filterDropdownMenuBg (->color "#ffffff")
+   ;; Background color of fixed table header when sorted
+   :fixedHeaderSortActiveBg (->color "#f0f0f0")
+   ;; Background of footer
+   :footerBg (->color "#fafafa")
+   ;; Color of footer text
+   :footerColor (->color "rgba(0, 0, 0, 0.88)")
+   ;; Background of table header
+   :headerBg (->color "#fafafa")
+   ;; Border radius of table header
+   :headerBorderRadius 8
+   ;; Color of table header text
+   :headerColor (->color "rgba(0, 0, 0, 0.88)")
+   ;; Background color of table header filter button when hovered
+   :headerFilterHoverBg (->color "rgba(0, 0, 0, 0.06)")
+   ;; Background color of table header when sorted
+   :headerSortActiveBg (->color "#f0f0f0")
+   ;; Background color of table header when sorted and hovered
+   :headerSortHoverBg (->color "#f0f0f0")
+   ;; Split border color of table header
+   :headerSplitColor (->color "#f0f0f0")
+   ;; Background color of table expanded row
+   :rowExpandedBg (->color "rgba(0, 0, 0, 0.02)")
+   ;; Background color of table hovered row
+   :rowHoverBg (->color "#fafafa")
+   ;; Background color of table selected row
+   :rowSelectedBg (->color "#e6f4ff")
+   ;; Background color of table selected row when hovered
+   :rowSelectedHoverBg (->color "#bae0ff")
+   ;; Width of selection column
+   :selectionColumnWidth 32
+   ;; Background of sticky scrollbar
+   :stickyScrollBarBg (->color "rgba(0, 0, 0, 0.25)")
+   ;; Border radius of sticky scrollbar
+   :stickyScrollBarBorderRadius 100
+   })
+
+
+
 ;; h1...h5
 ;; icons
 
