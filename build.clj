@@ -50,7 +50,7 @@
 
 (defn deploy-icon-resources [opts]
   (let [basis (b/create-basis {:project "ant-icons/deps.edn"})
-        coord 'com.phronemophobic.membrandt/ant-icons
+        coord 'com.phronemophobic/membrandt-icons
 
         base-dir "ant-icons"
         build-dir (-> (io/file base-dir "target")
@@ -74,10 +74,10 @@
                  :target-dir class-dir})
     (b/jar {:jar-file jar-file
             :class-dir class-dir})
-    #_(try ((requiring-resolve 'deps-deploy.deps-deploy/deploy)
+    (try ((requiring-resolve 'deps-deploy.deps-deploy/deploy)
           (merge {:installer :remote
                   :artifact jar-file
-                  :pom-file (b/pom-path {:lib combined-lib
+                  :pom-file (b/pom-path {:lib coord
                                          :class-dir class-dir})}
                  opts))
          (catch Exception e
