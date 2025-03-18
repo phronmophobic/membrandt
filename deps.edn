@@ -1,7 +1,8 @@
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.12.0"}
         com.phronemophobic/membrane {:mvn/version "0.14.4-beta"
-                                     ;; :local/root "../membrane"}
+                                     ;; :local/root "../membrane"
+                                     }
         com.phronemophobic/membrandt-icons {:mvn/version "0.1.0"}
         com.phronemophobic.membrane/skialib-macosx-aarch64 {:mvn/version "0.14-beta"
                                                             ;; :local/root "../membrane/csource/macos-aarch64"
